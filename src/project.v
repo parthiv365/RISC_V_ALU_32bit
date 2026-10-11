@@ -5,11 +5,15 @@
 
 `default_nettype none
 
-module tt_um_alu_32bit # (parameter WIDTH = 32)
+module tt_um_alu_32bit # (parameter WIDTH = 6)
 (
     input [WIDTH - 1:0] A,
     input [WIDTH - 1:0] B,
     input [3:0] alu_opc,
+    input clk,
+    input rst_n,
+    input ena,
+    
     output reg [WIDTH - 1:0] result,
     output reg zero
 );
