@@ -38,7 +38,7 @@ PROJECT_SOURCES = project.v
 
 VERILOG_SOURCES += $(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))
 
-TOPLEVEL = tt_um_alu_32bit
+TOPLEVEL = tt_um_alu_6bit
 COCOTB_TEST_MODULES = test
 
 # include cocotb's make rules to take care of the simulator setup
