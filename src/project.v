@@ -5,7 +5,7 @@
 
 `default_nettype none
 
-module tt_um_alu_32bit # (parameter WIDTH = 6)
+module tt_um_alu_6bit # (parameter WIDTH = 6)
 (
     input [WIDTH - 1:0] A,
     input [WIDTH - 1:0] B,
