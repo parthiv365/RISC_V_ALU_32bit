@@ -1,6 +1,6 @@
 # Tiny Tapeout project information
 project:
-  title:        "RISC-V ALU 32 bit"      # Project title
+  title:        "RISC-V inspired ALU 6 bit"      # Project title
   author:       "PARTHIV S"      # Your name
   discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
   description:  "Performs a subset of 10 operations from the actual RISC-V ISA"      # One line description of what your project does
