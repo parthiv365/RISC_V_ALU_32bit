@@ -34,11 +34,11 @@ endif
 # Allow sharing configuration between design and testbench via `include`:
 COMPILE_ARGS 		+= -I$(SRC_DIR)
 
-# Include the testbench sources:
-VERILOG_SOURCES += $(PWD)/tb.v
-TOPLEVEL = tb_alu_32bit
+PROJECT_SOURCES = project.v
 
-# List test modules to run, separated by commas and without the .py suffix:
+VERILOG_SOURCES += $(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))
+
+TOPLEVEL = tt_um_alu_32bit
 COCOTB_TEST_MODULES = test
 
 # include cocotb's make rules to take care of the simulator setup
