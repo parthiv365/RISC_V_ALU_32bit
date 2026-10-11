@@ -2,39 +2,46 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import cocotb
-from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles
 
 
 @cocotb.test()
 async def test_project(dut):
-    dut._log.info("Start")
+    dut._log.info("Starting 32-bit ALU tests")
 
-    # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, unit="us")
-    cocotb.start_soon(clock.start())
+    test_cases = [
+        # A, B, opcode, expected result
+        (0x00000005, 0x00000003, 0b0000, 0x00000008),  # ADD
+        (0x00000005, 0x00000003, 0b0001, 0x00000002),  # SUB
+        (0x0000000F, 0x0000000A, 0b0010, 0x0000000A),  # AND
+        (0x0000000F, 0x0000000A, 0b0011, 0x0000000F),  # OR
+        (0x0000000F, 0x0000000A, 0b0100, 0x00000005),  # XOR
+        (0x00000001, 0x00000004, 0b0101, 0x00000010),  # SLL
+        (0x00000010, 0x00000002, 0b0110, 0x00000004),  # SRL
+        (0x80000000, 0x00000001, 0b0111, 0xC0000000),  # SRA
+        (0xFFFFFFFF, 0x00000001, 0b1000, 0x00000001),  # SLT signed
+        (0xFFFFFFFF, 0x00000001, 0b1001, 0x00000000),  # SLTU unsigned
+    ]
 
-    # Reset
-    dut._log.info("Reset")
-    dut.ena.value = 1
-    dut.ui_in.value = 0
-    dut.uio_in.value = 0
-    dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 10)
-    dut.rst_n.value = 1
+    for a, b, op, expected in test_cases:
+        dut.A.value = a
+        dut.B.value = b
+        dut.alu_opc.value = op
 
-    dut._log.info("Test project behavior")
+        # Allow combinational logic to settle
+        await cocotb.triggers.Timer(1, unit="ns")
 
-    # Set the input values you want to test
-    dut.ui_in.value = 20
-    dut.uio_in.value = 30
+        actual = int(dut.result.value)
+        zero = int(dut.zero.value)
+        expected_zero = int(expected == 0)
 
-    # Wait for one clock cycle to see the output values
-    await ClockCycles(dut.clk, 1)
+        assert actual == expected, (
+            f"A={a:#010x}, B={b:#010x}, opcode={op:04b}: "
+            f"expected {expected:#010x}, got {actual:#010x}"
+        )
 
-    # The following assersion is just an example of how to check the output values.
-    # Change it to match the actual expected output of your module:
-    assert dut.uo_out.value == 50
+        assert zero == expected_zero, (
+            f"Incorrect zero flag for opcode={op:04b}: "
+            f"expected {expected_zero}, got {zero}"
+        )
 
-    # Keep testing the module by changing the input values, waiting for
-    # one or more clock cycles, and asserting the expected output values.
+    dut._log.info("All ALU tests passed")
