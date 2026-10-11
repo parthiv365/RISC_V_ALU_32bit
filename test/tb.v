@@ -1,5 +1,5 @@
 `default_nettype none
-``timescale 10ps/1ps
+`timescale 10ps/1ps
 
 module tb_alu_6bit;
 
