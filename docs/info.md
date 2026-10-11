@@ -9,12 +9,12 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Explain how your project works
+The ALU takes in 2 register or immediate operands with the instruction opcode, return the result of the operation. It supports a subset of 10 operations of the official RISC-V instruction set architecture. 
 
 ## How to test
 
-Explain how to use your project
+The project can be tested by using the testbench file provided in the /test section. Currently, the module has passed 35 tests including all the ten instructions and the flag value checks. Feel free to to add any other testcases to check the functionality of my ALU.
 
 ## External hardware
 
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+No external hardware required for this project. 
