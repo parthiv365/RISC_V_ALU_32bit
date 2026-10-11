@@ -1,24 +1,20 @@
 `default_nettype none
-`timescale 10ps/1ps
+``timescale 10ps/1ps
 
-module tb_alu_32bit;
+module tb_alu_6bit;
 
-    // Inputs to the ALU
-    reg  [31:0] A;
-    reg  [31:0] B;
-    reg  [3:0]  alu_opc;
+    reg  [5:0] A;
+    reg  [5:0] B;
+    reg  [3:0] alu_opc;
 
-    // Outputs from the ALU
-    wire [31:0] result;
-    wire        zero;
+    wire [5:0] result;
+    wire       zero;
 
-    integer tests;
-    integer errors;
+    integer passed;
+    integer failed;
 
-    // Instantiate the ALU
-    tt_um_alu_32bit #(
-        .WIDTH(32)
-    ) DUT (
+    // Change alu_6bit if your module has a different name.
+    tt_um_alu_6bit dut (
         .A(A),
         .B(B),
         .alu_opc(alu_opc),
@@ -27,153 +23,182 @@ module tb_alu_32bit;
     );
 
     // Self-checking test task
-    task run_test;
-        input [31:0] test_A;
-        input [31:0] test_B;
-        input [3:0]  test_op;
-        input [31:0] expected;
-
-        reg expected_zero;
+    task check;
+        input [3:0] op;
+        input [5:0] a;
+        input [5:0] b;
+        input [5:0] expected;
 
         begin
-            A       = test_A;
-            B       = test_B;
-            alu_opc = test_op;
+            alu_opc = op;
+            A = a;
+            B = b;
 
-            // Expected zero flag
-            expected_zero = (expected == 32'b0);
-
-            // Allow combinational logic to settle
             #10;
 
-            tests = tests + 1;
+            if ((result === expected) &&
+                (zero === (expected == 6'b000000))) begin
 
-            if ((result !== expected) ||
-                (zero !== expected_zero)) begin
+                $display(
+                    "PASS | OP=%b A=%b B=%b RESULT=%b ZERO=%b",
+                    op, a, b, result, zero
+                );
 
-                errors = errors + 1;
-
-                $display("FAIL | OP=%b A=%h B=%h",
-                         test_op, test_A, test_B);
-                $display("     | Expected=%h Zero=%b",
-                         expected, expected_zero);
-                $display("     | Actual  =%h Zero=%b",
-                         result, zero);
+                passed = passed + 1;
             end
             else begin
-                $display("PASS | OP=%b A=%h B=%h Result=%h Zero=%b",
-                         test_op, test_A, test_B, result, zero);
+
+                $display(
+                    "FAIL | OP=%b A=%b B=%b EXPECTED=%b ACTUAL=%b ZERO=%b",
+                    op, a, b, expected, result, zero
+                );
+
+                failed = failed + 1;
             end
         end
     endtask
 
     initial begin
-        A       = 32'b0;
-        B       = 32'b0;
-        alu_opc = 4'b0;
-        tests   = 0;
-        errors  = 0;
+        A = 0;
+        B = 0;
+        alu_opc = 0;
+        passed = 0;
+        failed = 0;
 
         $display("======================================");
-        $display("       32-BIT ALU VERIFICATION");
+        $display("       6-BIT ALU TESTBENCH");
         $display("======================================");
 
-        // 0000: ADD
-        run_test(32'd5, 32'd3, 4'b0000, 32'd8);
-        run_test(32'h7FFFFFFF, 32'd1,
-                 4'b0000, 32'h80000000);
+        // ---------------------------------
+        // 1. ADD (0000)
+        // ---------------------------------
+        $display("\n--- ADD ---");
 
-        // 0001: SUB
-        run_test(32'd5, 32'd5, 4'b0001, 32'd0);
-        run_test(32'd3, 32'd5, 4'b0001, 32'hFFFFFFFE);
+        check(4'b0000, 6'd0,  6'd0,  6'd0);
+        check(4'b0000, 6'd1,  6'd1,  6'd2);
+        check(4'b0000, 6'd31, 6'd1,  6'b100000);
+        check(4'b0000, 6'd63, 6'd1,  6'd0);
+        check(4'b0000, 6'd32, 6'd63, 6'd31);
+        check(4'b0000, 6'd63, 6'd63, 6'd62);
 
-        // 0010: AND
-        run_test(32'hF0F0F0F0, 32'h0FF00FF0,
-                 4'b0010, 32'h00F000F0);
+        // ---------------------------------
+        // 2. SUB (0001)
+        // ---------------------------------
+        $display("\n--- SUB ---");
 
-        // 0011: OR
-        run_test(32'hF0000000, 32'h0000000F,
-                 4'b0011, 32'hF000000F);
+        check(4'b0001, 6'd0,  6'd0,  6'd0);
+        check(4'b0001, 6'd5,  6'd3,  6'd2);
+        check(4'b0001, 6'd3,  6'd5,  6'd62);
+        check(4'b0001, 6'd0,  6'd1,  6'd63);
+        check(4'b0001, 6'd32, 6'd1,  6'd31);
+        check(4'b0001, 6'd31, 6'd63, 6'd32);
 
-        // 0100: XOR
-        run_test(32'hAAAAAAAA, 32'hFFFFFFFF,
-                 4'b0100, 32'h55555555);
+        // ---------------------------------
+        // 3. AND (0010)
+        // ---------------------------------
+        $display("\n--- AND ---");
 
-        // 0101: SLL
-        run_test(32'd1, 32'd4, 4'b0101, 32'd16);
-        run_test(32'd1, 32'd31,
-                 4'b0101, 32'h80000000);
+        check(4'b0010, 6'b000000, 6'b111111, 6'b000000);
+        check(4'b0010, 6'b111111, 6'b111111, 6'b111111);
+        check(4'b0010, 6'b101010, 6'b010101, 6'b000000);
+        check(4'b0010, 6'b101010, 6'b111100, 6'b101000);
 
-        // 0110: SRL
-        run_test(32'h80000000, 32'd1,
-                 4'b0110, 32'h40000000);
-        run_test(32'hFFFFFFFF, 32'd31,
-                 4'b0110, 32'd1);
+        // ---------------------------------
+        // 4. OR (0011)
+        // ---------------------------------
+        $display("\n--- OR ---");
 
-        // 0111: SRA
-        run_test(32'h80000000, 32'd1,
-                 4'b0111, 32'hC0000000);
-        run_test(32'h80000000, 32'd31,
-                 4'b0111, 32'hFFFFFFFF);
-        run_test(32'h40000000, 32'd1,
-                 4'b0111, 32'h20000000);
+        check(4'b0011, 6'b000000, 6'b000000, 6'b000000);
+        check(4'b0011, 6'b000000, 6'b111111, 6'b111111);
+        check(4'b0011, 6'b101010, 6'b010101, 6'b111111);
+        check(4'b0011, 6'b101000, 6'b000100, 6'b101100);
 
-        // 1000: SLT (signed comparison)
-        run_test(32'hFFFFFFFF, 32'd1,
-                 4'b1000, 32'd1);
-        run_test(32'd5, 32'd3, 4'b1000, 32'd0);
-        run_test(32'h80000000, 32'd1,
-                 4'b1000, 32'd1);
+        // ---------------------------------
+        // 5. XOR (0100)
+        // ---------------------------------
+        $display("\n--- XOR ---");
 
-        // 1001: SLTU (unsigned comparison)
-        run_test(32'hFFFFFFFF, 32'd1,
-                 4'b1001, 32'd0);
-        run_test(32'd3, 32'd5, 4'b1001, 32'd1);
-        run_test(32'h80000000, 32'd1,
-                 4'b1001, 32'd0);
+        check(4'b0100, 6'b000000, 6'b000000, 6'b000000);
+        check(4'b0100, 6'b111111, 6'b111111, 6'b000000);
+        check(4'b0100, 6'b101010, 6'b010101, 6'b111111);
+        check(4'b0100, 6'b101010, 6'b111100, 6'b010110);
 
-        // ADD
-        run_test(32'hFFFFFFFF, 32'd1, 4'b0000, 32'h00000000);
-        run_test(32'h7FFFFFFF, 32'd1, 4'b0000, 32'h80000000);
+        // ---------------------------------
+        // 6. SLL (0101)
+        // ---------------------------------
+        $display("\n--- SLL ---");
 
-        // SUB
-        run_test(32'd0, 32'd1, 4'b0001, 32'hFFFFFFFF);
-        run_test(32'h80000000, 32'd1, 4'b0001, 32'h7FFFFFFF);
+        check(4'b0101, 6'b000001, 6'd0,  6'b000001);
+        check(4'b0101, 6'b000001, 6'd1,  6'b000010);
+        check(4'b0101, 6'b000001, 6'd5,  6'b100000);
+        check(4'b0101, 6'b000011, 6'd2,  6'b001100);
+        check(4'b0101, 6'b111111, 6'd1,  6'b111110);
+        check(4'b0101, 6'b000001, 6'd6,  6'b000000);
 
-        // AND, OR, XOR
-        run_test(32'hFFFFFFFF, 32'h00000000, 4'b0010, 32'h00000000);
-        run_test(32'hAAAAAAAA, 32'h55555555, 4'b0011, 32'hFFFFFFFF);
-        run_test(32'hAAAAAAAA, 32'hAAAAAAAA, 4'b0100, 32'h00000000);
+        // ---------------------------------
+        // 7. SRL (0110)
+        // ---------------------------------
+        $display("\n--- SRL ---");
 
-        // SLL, SRL, SRA
-        run_test(32'h00000001, 32'd31, 4'b0101, 32'h80000000);
-        run_test(32'h80000000, 32'd31, 4'b0110, 32'h00000001);
-        run_test(32'h80000000, 32'd31, 4'b0111, 32'hFFFFFFFF);
+        check(4'b0110, 6'b100000, 6'd0,  6'b100000);
+        check(4'b0110, 6'b100000, 6'd1,  6'b010000);
+        check(4'b0110, 6'b111111, 6'd1,  6'b011111);
+        check(4'b0110, 6'b111111, 6'd5,  6'b000001);
+        check(4'b0110, 6'b101010, 6'd2,  6'b001010);
+        check(4'b0110, 6'b101010, 6'd6,  6'b000000);
 
-        // SLT (signed) and SLTU (unsigned)
-        run_test(32'hFFFFFFFF, 32'd1, 4'b1000, 32'd1);
-        run_test(32'hFFFFFFFF, 32'd1, 4'b1001, 32'd0);
-        run_test(32'h80000000, 32'h7FFFFFFF, 4'b1000, 32'd1);
-        run_test(32'hFFFFFFFF, 32'hFFFFFFFF, 4'b1001, 32'd0);
+        // ---------------------------------
+        // 8. SRA (0111)
+        // ---------------------------------
+        $display("\n--- SRA ---");
 
-        // Unsupported opcode: default result must be zero
-        run_test(32'h12345678, 32'h87654321,
-                 4'b1010, 32'd0);
+        check(4'b0111, 6'b000000, 6'd1,  6'b000000);
+        check(4'b0111, 6'b011111, 6'd1,  6'b001111);
+        check(4'b0111, 6'b100000, 6'd1,  6'b110000);
+        check(4'b0111, 6'b111111, 6'd1,  6'b111111);
+        check(4'b0111, 6'b100000, 6'd5,  6'b111111);
+        check(4'b0111, 6'b100000, 6'd6,  6'b111111);
 
+        // ---------------------------------
+        // 9. SLT - SIGNED (1000)
+        // ---------------------------------
+        $display("\n--- SLT SIGNED ---");
 
-        // Final summary
-        $display("");
+        check(4'b1000, 6'b000000, 6'b000000, 6'd0);
+        check(4'b1000, 6'b000001, 6'b000010, 6'd1);
+        check(4'b1000, 6'b000010, 6'b000001, 6'd0);
+        check(4'b1000, 6'b100000, 6'b011111, 6'd1);
+        check(4'b1000, 6'b011111, 6'b100000, 6'd0);
+        check(4'b1000, 6'b100000, 6'b111111, 6'd1);
+        check(4'b1000, 6'b111111, 6'b100000, 6'd0);
+
+        // ---------------------------------
+        // 10. SLTU - UNSIGNED (1001)
+        // ---------------------------------
+        $display("\n--- SLTU UNSIGNED ---");
+
+        check(4'b1001, 6'b000000, 6'b000000, 6'd0);
+        check(4'b1001, 6'b000001, 6'b000010, 6'd1);
+        check(4'b1001, 6'b000010, 6'b000001, 6'd0);
+        check(4'b1001, 6'b011111, 6'b100000, 6'd1);
+        check(4'b1001, 6'b100000, 6'b011111, 6'd0);
+        check(4'b1001, 6'b000000, 6'b111111, 6'd1);
+        check(4'b1001, 6'b111111, 6'b000000, 6'd0);
+
+        // ---------------------------------
+        // FINAL SUMMARY
+        // ---------------------------------
+        $display("\n======================================");
+        $display("           TEST SUMMARY");
         $display("======================================");
-        $display("             TEST SUMMARY");
-        $display("======================================");
-        $display("Total tests : %0d", tests);
-        $display("Passed      : %0d", tests - errors);
-        $display("Failed      : %0d", errors);
+        $display("Total tests : %0d", passed + failed);
+        $display("Passed      : %0d", passed);
+        $display("Failed      : %0d", failed);
 
-        if (errors == 0)
+        if (failed == 0)
             $display("RESULT: ALL TESTS PASSED");
         else
-            $display("RESULT: VERIFICATION FAILED");
+            $display("RESULT: SOME TESTS FAILED");
 
         $display("======================================");
 
