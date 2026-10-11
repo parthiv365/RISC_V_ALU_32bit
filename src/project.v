@@ -21,6 +21,7 @@ module tt_um_alu_6bit # (parameter WIDTH = 6)
 wire [5:0] A  = ui_in[5:0];
 wire [5:0] B  = uio_in[5:0];
 wire [3:0] alu_opc = { uio_in[7:6], ui_in[7:6] }; 
+wire [5:0] result;
 
 always @(*) begin
     case(alu_opc)
@@ -38,6 +39,9 @@ always @(*) begin
 
         default: result = {WIDTH{1'b0}};
     endcase
-    zero = (result == {WIDTH{1'b0}});
+    assign uo_out[7] = 1'b0;
+    assign uo_out[6] = (result == {WIDTH{1'b0}});
+    assign uo_out[5:0] = result;
 end
+    
 endmodule
