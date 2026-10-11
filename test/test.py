@@ -36,7 +36,7 @@ async def test_project(dut):
     cocotb.start_soon(clock.start())
 
     for a, b, op, expected in test_cases:
-        dut.A.value = a+
+        dut.A.value = a
         dut.B.value = b
         dut.alu_opc.value = op
 
