@@ -39,9 +39,9 @@ always @(*) begin
 
         default: result = {WIDTH{1'b0}};
     endcase
-    assign uo_out[7] = 1'b0;
-    assign uo_out[6] = (result == {WIDTH{1'b0}});
-    assign uo_out[5:0] = result;
 end
-    
+assign uo_out[7] = 1'b0;
+assign uo_out[6] = (result == {WIDTH{1'b0}});
+assign uo_out[5:0] = result;
+
 endmodule
