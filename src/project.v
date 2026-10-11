@@ -6,17 +6,21 @@
 `default_nettype none
 
 module tt_um_alu_6bit # (parameter WIDTH = 6)
-(
-    input [WIDTH - 1:0] A,
-    input [WIDTH - 1:0] B,
-    input [3:0] alu_opc,
-    input clk,
-    input rst_n,
-    input ena,
-    
-    output reg [WIDTH - 1:0] result,
-    output reg zero
+    (
+    input  wire [7:0] ui_in,    // Dedicated inputs
+    output wire [7:0] uo_out,   // Dedicated outputs
+    input  wire [7:0] uio_in,   // IO pads: Input path
+    output wire [7:0] uio_out,  // IO pads: Output path
+    output wire [7:0] uio_oe,   // IO pads: Enable path (1=out, 0=in)
+    input  wire       ena,      // Will go high when design is active
+    input  wire       clk,      // Unused (Purely combinational)
+    input  wire       rst_n     // Unused (Purely combinational)
 );
+
+// --- 1. EXTRACT INPUTS FROM THE PHYSICAL PINS ---
+wire [5:0] A  = ui_in[5:0];
+wire [5:0] B  = uio_in[5:0];
+wire [3:0] alu_opc = { uio_in[7:6], ui_in[7:6] }; 
 
 always @(*) begin
     case(alu_opc)
