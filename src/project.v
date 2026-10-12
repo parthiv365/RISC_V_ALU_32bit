@@ -23,7 +23,7 @@ wire [5:0] B  = uio_in[5:0];
 wire [3:0] alu_opc = { uio_in[7:6], ui_in[7:6] }; 
 reg [5:0] result;
 wire _unused_signals = |{clk, rst_n, ena};
-
+wire zero;
 
 always @(*) begin
     case(alu_opc)
@@ -44,6 +44,7 @@ always @(*) begin
 end
 assign uo_out[7] = 1'b0;
 assign uo_out[6] = (result == {WIDTH{1'b0}});
+    assign zero = uo_out[6];
 assign uo_out[5:0] = result;
 assign uio_out = 8'b00000000; 
 assign uio_oe  = 8'b00000000; 
