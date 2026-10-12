@@ -31,10 +31,13 @@ VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
 
 endif
 
+# Wrapper top level (used for both RTL and gate-level simulation)
+VERILOG_SOURCES += $(PWD)/tt_tb.v
+
 # Allow sharing configuration between design and testbench via `include`:
 COMPILE_ARGS 		+= -I$(SRC_DIR)
 
-TOPLEVEL = tt_um_alu_6bit
+TOPLEVEL = tb
 COCOTB_TEST_MODULES = test
 
 # include cocotb's make rules to take care of the simulator setup
