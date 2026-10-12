@@ -34,10 +34,6 @@ endif
 # Allow sharing configuration between design and testbench via `include`:
 COMPILE_ARGS 		+= -I$(SRC_DIR)
 
-PROJECT_SOURCES = project.v
-
-VERILOG_SOURCES += $(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))
-
 TOPLEVEL = tt_um_alu_6bit
 COCOTB_TEST_MODULES = test
 
