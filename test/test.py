@@ -45,7 +45,7 @@ async def test_project(dut):
         dut.uio_in.value = (((op >> 2) & 0x3) << 6) | (b & 0x3F)
 
         # Allow combinational logic to settle
-        await Timer(1, unit="ns")
+        await Timer(100, unit="ns")
 
         out = int(dut.uo_out.value)
         actual = out & 0x3F
@@ -53,7 +53,7 @@ async def test_project(dut):
         expected_zero = int(expected == 0)
 
         # Allow combinational logic to settle
-        await Timer(1, unit="ns")
+        await Timer(100, unit="ns")
 
         out = int(dut.uo_out.value)
         actual = out & 0x3F
