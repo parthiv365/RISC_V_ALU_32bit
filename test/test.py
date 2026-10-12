@@ -35,17 +35,29 @@ async def test_project(dut):
     # Start clock: 10 us period (100 kHz)
     clock = Clock(dut.clk, 10, unit="us")
     cocotb.start_soon(clock.start())
+    
+    dut.rst_n.value = 1
+    dut.ui_in.value = 0
+    dut.uio_in.value = 0
 
     for a, b, op, expected in test_cases:
-        dut.A.value = a
-        dut.B.value = b
-        dut.alu_opc.value = op
+        dut.ui_in.value  = ((op & 0x3) << 6) | (a & 0x3F)
+        dut.uio_in.value = (((op >> 2) & 0x3) << 6) | (b & 0x3F)
 
         # Allow combinational logic to settle
         await Timer(1, unit="ns")
 
-        actual = int(dut.result.value)
-        actual_zero = int(dut.zero.value)
+        out = int(dut.uo_out.value)
+        actual = out & 0x3F
+        actual_zero = (out >> 6) & 1
+        expected_zero = int(expected == 0)
+
+        # Allow combinational logic to settle
+        await Timer(1, unit="ns")
+
+        out = int(dut.uo_out.value)
+        actual = out & 0x3F
+        actual_zero = (out >> 6) & 1
         expected_zero = int(expected == 0)
 
         assert actual == expected, (
